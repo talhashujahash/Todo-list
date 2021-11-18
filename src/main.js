@@ -1,10 +1,10 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import vuetify from './plugins/vuetify'
-import { loadFonts } from './plugins/webfontloader'
+import { createApp } from "vue";
+import App from "./App.vue";
+import VueAxios from "vue-axios";
+// import Router from './router/router'
+import axios from "axios";
+import router from './router'
+import '../src/index.css'
 
-loadFonts()
 
-createApp(App)
-  .use(vuetify)
-  .mount('#app')
+createApp(App).use(router).use(VueAxios, axios).mount("#app");
