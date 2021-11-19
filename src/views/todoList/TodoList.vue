@@ -11,15 +11,15 @@ export default {
   },
   data() {
     return {
-      taskList: "",
+      taskList: [],
     };
   },
   beforeMount() {
     this.todolist();
+    console.log(this.taskList);
   },
 
   mounted() {
-    console.log("token::::", location.pathname);
     this.token = localStorage.getItem("token");
     this.todolist();
   },
@@ -27,25 +27,22 @@ export default {
   setup() {
     const state = reactive({
       token: localStorage.getItem("token"),
-
       loading: false,
     });
 
-    const deleteTask = (taskId) => {
-      Axios.delete(`http://54.144.155.145/api/item/${taskId}`, {
-        headers: { Authorization: "Bearer " + state.token },
-      });
-      const taskIndex = this.taskList.findIndex((task) => task.id === taskId);
-      this.taskList.splice(taskIndex, 1);
-    };
-
     return {
       ...toRefs(state),
-      deleteTask,
     };
   },
 
   methods: {
+    deleteTask(taskId) {
+      Axios.delete(`http://54.144.155.145/api/item/${taskId}`, {
+        headers: { Authorization: "Bearer " + localStorage.getItem("token") },
+      });
+      const taskIndex = this.taskList.findIndex((task) => task.id === taskId);
+      this.taskList.splice(taskIndex, 1);
+    },
     // redirect to create todo component.
     addtodo() {
       this.$router.push("/createtodo");
@@ -97,9 +94,9 @@ export default {
         class="task-list-item"
       >
         <div class="task-list-checkbox-wrapper"></div>
-        <button @click="deleteTask(taskItem.id)" class="task-list-cta-icon">
+        <p @click="this.deleteTask(taskItem.id)" class="task-list-cta-icon">
           <i class="fa fa-trash-o" style="font-size: 24px; color: red"></i>
-        </button>
+        </p>
         <p
           @click="
             () => {
