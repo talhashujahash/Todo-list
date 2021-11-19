@@ -2,67 +2,79 @@
 import { computed, reactive, toRefs } from "vue";
 import Axios from "axios";
 
-import IconDelete from "../IconDelete.vue";
 import Navbar from "@/component/navbar.vue";
 
 export default {
   name: "App",
   components: {
-    IconDelete,
     Navbar,
+  },
+  data() {
+    return {
+      taskList: "",
+    };
+  },
+  beforeMount() {
+    this.todolist();
   },
 
   mounted() {
-    console.log("token::::", this.token);
+    console.log("token::::", location.pathname);
     this.token = localStorage.getItem("token");
+    this.todolist();
   },
 
   setup() {
     const state = reactive({
       token: localStorage.getItem("token"),
-      taskList: [],
-    });
-    if (state.token != "") {
-      Axios.get("http://54.144.155.145/api/items", {
-        headers: {
-          Authorization: "Bearer " + state.token,
-        },
-      }).then((res) => {
-        console.log(res);
-        state.taskList = res.data.items.data;
-      });
-    }
-    const taskLists = reactive({
-      all: computed(() => state.taskList),
-    });
 
-    const tasksInView = computed(() => {
-      return state.taskList;
+      loading: false,
     });
-
-    const toggleEdit = (taskId) => {
-      const taskIndex = state.taskList.findIndex((task) => task.id === taskId);
-      state.taskList[taskIndex].edit = !state.taskList[taskIndex].edit;
-    };
 
     const deleteTask = (taskId) => {
       Axios.delete(`http://54.144.155.145/api/item/${taskId}`, {
         headers: { Authorization: "Bearer " + state.token },
       });
-      const taskIndex = state.taskList.findIndex((task) => task.id === taskId);
-      state.taskList.splice(taskIndex, 1);
+      const taskIndex = this.taskList.findIndex((task) => task.id === taskId);
+      this.taskList.splice(taskIndex, 1);
     };
 
     return {
       ...toRefs(state),
       deleteTask,
-      tasksInView,
-      toggleEdit,
     };
   },
+
   methods: {
+    // redirect to create todo component.
     addtodo() {
       this.$router.push("/createtodo");
+    },
+    // get todo list
+    todolist() {
+      if (localStorage.getItem("token") != "") {
+        Axios.get("http://54.144.155.145/api/items", {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token"),
+          },
+        })
+          .then((res) => {
+            console.log("-----", res);
+            this.taskList = res.data.items.data;
+            this.loading = true;
+          })
+          .catch(() => {
+            if (localStorage.getItem("token") != "") {
+              Axios.post(
+                `http://54.144.155.145/api/refresh-token/${localStorage.getItem(
+                  "token"
+                )}`
+              ).then((res) =>
+                localStorage.setItem("token", res.data.access_token)
+              );
+            }
+          });
+      }
     },
   },
 };
@@ -77,34 +89,28 @@ export default {
   <main v-if="token != null && token != ''" class="main-wrapper">
     <ul class="task-list">
       <button @click="addtodo">Add Todo</button>
-      <p v-if="tasksInView.length <= 0">loading...</p>
+      <p v-if="taskList.length <= 0 && !loading">loading...</p>
+      <p v-if="loading && taskList.length <= 0">No todos</p>
       <li
-        v-for="taskItem in tasksInView"
+        v-for="taskItem in taskList"
         :key="taskItem.id"
         class="task-list-item"
       >
         <div class="task-list-checkbox-wrapper"></div>
-        <input
-          v-if="taskItem.edit"
-          class="task-list-edit-input"
-          type="text"
-          v-model="taskItem.title"
-        />
+        <button @click="deleteTask(taskItem.id)" class="task-list-cta-icon">
+          <i class="fa fa-trash-o" style="font-size: 24px; color: red"></i>
+        </button>
         <p
-          v-else
+          @click="
+            () => {
+              this.$router.push(`/edittodo?id=${taskItem.id}`);
+            }
+          "
           class="task-list-text"
           :class="taskItem.complete ? 'is-complete' : ''"
         >
-          {{ taskItem.title }}
+          {{ taskItem.title }}:{{ taskItem.description }}
         </p>
-        <div class="task-list-cta">
-          <p>
-            <IconDelete
-              class="task-list-cta-icon"
-              @click="deleteTask(taskItem.id)"
-            />
-          </p>
-        </div>
       </li>
     </ul>
   </main>

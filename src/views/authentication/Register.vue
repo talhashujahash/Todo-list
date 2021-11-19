@@ -1,5 +1,5 @@
 <template>
-  <navbar />
+  <Navbar />
   <form @submit="(e) => e.preventDefault()">
     <div class="form">
       {{ msg }}
@@ -34,9 +34,8 @@ import { reactive, toRefs } from "@vue/reactivity";
 import Axios from "axios";
 import Navbar from "@/component/navbar.vue";
 import { computed } from "@vue/runtime-core";
-import navbar from "../../component/navbar.vue";
 export default {
-  components: { navbar },
+  components: { Navbar },
   setup() {
     const state = reactive({
       email: "",
@@ -62,6 +61,7 @@ export default {
     };
   },
   methods: {
+    // create new user
     submit() {
       console.log("hello ");
       Axios.post("http://54.144.155.145/api/register", {

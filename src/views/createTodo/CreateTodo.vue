@@ -2,30 +2,27 @@
 import { computed, reactive, toRefs } from "vue";
 import { v4 as uuid } from "uuid";
 import Axios from "axios";
-import IconCheckCircle from "../IconCheckCircle.vue";
-import IconCircle from "../IconCircle.vue";
-import IconDelete from "../IconDelete.vue";
-import IconEdit from "../IconEdit.vue";
 import MainHero from "../MainHero.vue";
-import TabNav from "../TabNav.vue";
 
 export default {
   name: "App",
   components: {
-    IconCheckCircle,
-    IconCircle,
-    IconDelete,
-    IconEdit,
     MainHero,
-    TabNav,
   },
-
+  mounted() {
+    // redirect to login component when the user is not logged In
+    if (localStorage.getItem("token") == "") {
+      this.$router.push("/login");
+    }
+  },
+  // get specific todo items for pre filled fields
   setup() {
     let token = localStorage.getItem("token");
 
     const state = reactive({
       currentView: "All",
       newTaskInput: "",
+      newTaskInput1: "",
       taskList: [],
     });
     Axios.get("http://54.144.155.145/api/items", {
@@ -33,8 +30,6 @@ export default {
         Authorization: "Bearer " + token,
       },
     }).then((res) => {
-      console.log(res);
-      console.log(res.data.items.data.length);
       state.taskList = res.data.items.data;
       // console.log("items::::::", state.taskList);
     });
@@ -50,7 +45,7 @@ export default {
     const tasksInView = computed(() => {
       return state.taskList;
     });
-
+    // create todo
     const addTask = () => {
       Axios.post(
         "http://54.144.155.145/api/item",
@@ -58,23 +53,26 @@ export default {
         {
           id: uuid(),
           title: state.newTaskInput,
-          description: state.newTaskInput,
+          description: state.newTaskInput1,
         },
         { headers: { Authorization: "Bearer " + token } }
       ).then((res) => {
         state.taskList.push(res.data.item);
       });
-      // state.taskList.push({
-      //   id: uuid(),
-      //   complete: false,
-      //   edit: false,
-      //   label: state.newTaskInput,
-      // });
       state.newTaskInput = "";
+      state.newTaskInput1 = "";
     };
 
     const toggleEdit = (taskId) => {
       const taskIndex = state.taskList.findIndex((task) => task.id === taskId);
+      Axios.put(
+        `http://54.144.155.145/api/item/${taskId}`,
+        {},
+        {
+          headers: { Authorization: "Bearer " + token },
+        }
+      );
+
       state.taskList[taskIndex].edit = !state.taskList[taskIndex].edit;
     };
 
@@ -97,67 +95,36 @@ export default {
       setView,
       tasksInView,
       toggleEdit,
+
       taskListOverview,
     };
+  },
+  methods: {
+    todolist() {
+      this.$router.push("/");
+    },
   },
 };
 </script>
 
 <template>
   <main class="main-wrapper">
-    <MainHero />
+    <MainHero /> <button @click="todolist">Todo List</button>
     <div class="new-task-wrapper">
       <input
         type="text"
-        placeholder="Type a new todo item"
+        placeholder=" new todo title"
         class="new-task-input"
         v-model="newTaskInput"
-        @keyup.enter="addTask"
       />
-      <button class="new-task-button" @click="addTask">+ Add</button>
+      <input
+        type="text"
+        placeholder="Type a new todo desc"
+        class="new-task-input"
+        v-model="newTaskInput1"
+      />
     </div>
-
-    <TabNav
-      :currentView="currentView"
-      :taskListOverview="taskListOverview"
-      @update-current-view="setView"
-    />
-    <ul class="task-list">
-      <li
-        v-for="taskItem in tasksInView"
-        :key="taskItem.id"
-        class="task-list-item"
-      >
-        <div class="task-list-checkbox-wrapper"></div>
-        <input
-          v-if="taskItem.edit"
-          class="task-list-edit-input"
-          type="text"
-          v-model="taskItem.title"
-        />
-        <p
-          v-else
-          class="task-list-text"
-          :class="taskItem.complete ? 'is-complete' : ''"
-        >
-          {{ taskItem.title }}
-        </p>
-        <div class="task-list-cta">
-          <p>
-            <IconEdit
-              class="task-list-cta-icon"
-              @click="toggleEdit(taskItem.id)"
-            />
-          </p>
-          <p>
-            <IconDelete
-              class="task-list-cta-icon"
-              @click="deleteTask(taskItem.id)"
-            />
-          </p>
-        </div>
-      </li>
-    </ul>
+    <button class="new-task-button" @click="addTask">+ Add</button>
   </main>
 </template>
 
@@ -265,9 +232,10 @@ html {
   color: #fff;
   padding: 18px 24px;
   font-weight: 900;
+  height: 55px;
   border: 0;
-  border-top-right-radius: 8px;
-  border-bottom-right-radius: 8px;
+  border-radius: 8px;
+
   transition: 0.2s background ease-in;
   font-size: 1rem;
 }

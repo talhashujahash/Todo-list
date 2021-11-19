@@ -47,6 +47,7 @@ export default {
     };
   },
   methods: {
+    // user get login
     submit() {
       this.axios
         .post("http://54.144.155.145/api/login", {

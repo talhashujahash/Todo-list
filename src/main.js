@@ -6,5 +6,4 @@ import axios from "axios";
 import router from './router'
 import '../src/index.css'
 
-
 createApp(App).use(router).use(VueAxios, axios).mount("#app");

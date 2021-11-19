@@ -42,6 +42,18 @@ const routes = [
       //return import(/* webpackChunkName: "Register" */ '@/views/home/index.vue')
 
     }
+  },
+  {
+    path: '/edittodo',
+    name: 'editeTodo',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: function () {
+      return import(/* webpackChunkName: "Todo" */ '@/views/Editscreen/Editscreen.vue')
+      //return import(/* webpackChunkName: "Register" */ '@/views/home/index.vue')
+
+    }
   }
 
 ]
@@ -50,5 +62,6 @@ const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
 })
+
 
 export default router
