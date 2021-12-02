@@ -1,5 +1,6 @@
 {
   "name": "vue-your-todos",
+  "homepage":"https://talhashujahash.github.io/Todo-list",
   "version": "0.1.0",
   "scripts": {
     "serve": "vite preview",
